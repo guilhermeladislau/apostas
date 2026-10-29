@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApostaMaster - Simulador de Apostas</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Topbar / Header -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">APOSTA<strong>MASTER</strong></span>
+        <span class="badge-demo">MODO SIMULADOR</span>
+      </div>
+
+      <div class="wallet-bar">
+        <div class="wallet-info">
+          <span class="wallet-label">Saldo Virtual</span>
+          <span class="wallet-amount" id="balanceDisplay">R$ 1.000,00</span>
+        </div>
+        <button id="btnResetBalance" class="btn-deposit" title="Recarregar saldo para R$ 1.000,00">
+          <span class="icon">🔄</span> Recarregar
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation / Game Tabs -->
+    <nav class="game-tabs">
+      <button class="tab-btn active" data-game="crash">
+        <span class="tab-icon">🚀</span> Crash Multiplier
+      </button>
+      <button class="tab-btn" data-game="roulette">
+        <span class="tab-icon">🎯</span> Roleta Double
+      </button>
+      <button class="tab-btn" data-game="coinflip">
+        <span class="tab-icon">🪙</span> Cara ou Coroa
+      </button>
+    </nav>
+
+    <!-- Main Content Grid -->
+    <main class="main-grid">
+      <!-- Betting Controller Card -->
+      <section class="bet-card">
+        <h2 class="section-title">Controle de Aposta</h2>
+        
+        <div class="input-group">
+          <label for="betAmount">Quantia da Aposta (R$)</label>
+          <div class="input-wrapper">
+            <span class="currency-prefix">R$</span>
+            <input type="number" id="betAmount" min="1" step="1" value="10">
+          </div>
+        </div>
+
+        <div class="quick-bets">
+          <button type="button" class="btn-quick" data-action="half">½</button>
+          <button type="button" class="btn-quick" data-action="double">2x</button>
+          <button type="button" class="btn-quick" data-action="min">Min (R$5)</button>
+          <button type="button" class="btn-quick" data-action="add10">+10</button>
+          <button type="button" class="btn-quick" data-action="add50">+50</button>
+          <button type="button" class="btn-quick" data-action="max">Max</button>
+        </div>
+
+        <!-- Dynamic Game Controls Area -->
+        <div id="gameSpecificControls">
+          <!-- Crash Controls -->
+          <div class="specific-controls" id="controls-crash">
+            <button id="btnCrashAction" class="btn-play btn-crash-start">
+              Começar Rodada 🚀
+            </button>
+            <p class="control-hint">Inicie a rodada e retire seu lucro antes do foguete explodir!</p>
+          </div>
+
+          <!-- Roulette Controls -->
+          <div class="specific-controls hidden" id="controls-roulette">
+            <label class="control-label">Escolha sua Cor:</label>
+            <div class="color-options">
+              <button class="btn-color-pick color-red active" data-color="red">
+                <span class="color-indicator red"></span>
+                <span>Vermelho (2x)</span>
+              </button>
+              <button class="btn-color-pick color-black" data-color="black">
+                <span class="color-indicator black"></span>
+                <span>Preto (2x)</span>
+              </button>
+              <button class="btn-color-pick color-gold" data-color="gold">
+                <span class="color-indicator gold"></span>
+                <span>Dourado (14x)</span>
+              </button>
+            </div>
+            <button id="btnRouletteSpin" class="btn-play">Girar Roleta 🎯</button>
+          </div>
+
+          <!-- Coinflip Controls -->
+          <div class="specific-controls hidden" id="controls-coinflip">
+            <label class="control-label">Escolha o Lado:</label>
+            <div class="coin-options">
+              <button class="btn-coin-pick active" data-side="cara">
+                <span class="coin-preview">👑</span>
+                <span>Cara (2x)</span>
+              </button>
+              <button class="btn-coin-pick" data-side="coroa">
+                <span class="coin-preview">⚔️</span>
+                <span>Coroa (2x)</span>
+              </button>
+            </div>
+            <button id="btnCoinFlip" class="btn-play">Lançar Moeda 🪙</button>
+          </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-box">
+          <div class="stat-item">
+            <span class="stat-label">Apostas</span>
+            <span class="stat-value" id="statTotalBets">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Vitórias</span>
+            <span class="stat-value text-green" id="statWins">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Lucro Líquido</span>
+            <span class="stat-value" id="statProfit">R$ 0,00</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Game Stage Card -->
+      <section class="stage-card">
+        <!-- CRASH GAME STAGE -->
+        <div class="game-stage active" id="stage-crash">
+          <div class="crash-header">
+            <div class="crash-status" id="crashStatus">Pronto para decolar</div>
+            <div class="crash-recent" id="crashHistory">
+              <!-- recent multipliers populated by JS -->
+            </div>
+          </div>
+          
+          <div class="crash-arena" id="crashArena">
+            <div class="crash-multiplier" id="crashMultiplierText">1.00x</div>
+            <div class="rocket" id="rocket">🚀</div>
+            <div class="crash-curve" id="crashCurve"></div>
+          </div>
+        </div>
+
+        <!-- ROULETTE STAGE -->
+        <div class="game-stage" id="stage-roulette">
+          <div class="roulette-container">
+            <div class="roulette-header">
+              <span class="roulette-status" id="rouletteStatus">Faça sua aposta e gire a roleta!</span>
+              <div class="roulette-recent" id="rouletteHistory"></div>
+            </div>
+
+            <div class="roulette-wrapper">
+              <div class="roulette-pointer"></div>
+              <div class="roulette-strip" id="rouletteStrip">
+                <!-- dynamic roulette tiles generated by JS -->
+              </div>
+            </div>
+
+            <div class="roulette-result-display" id="rouletteResultDisplay">
+              Último sorteado: <strong id="rouletteLastDrawn">Nenhum</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- COINFLIP STAGE -->
+        <div class="game-stage" id="stage-coinflip">
+          <div class="coinflip-container">
+            <div class="coinflip-status" id="coinStatus">Escolha Cara ou Coroa e lance!</div>
+            
+            <div class="coin-wrapper">
+              <div class="coin" id="coin">
+                <div class="coin-side coin-heads">👑<small>CARA</small></div>
+                <div class="coin-side coin-tails">⚔️<small>COROA</small></div>
+              </div>
+            </div>
+
+            <div class="coin-history-bar" id="coinHistory">
+              <!-- dynamic coins -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bet History Table Section -->
+    <section class="history-card">
+      <div class="history-header">
+        <h2 class="section-title">Histórico de Transações</h2>
+        <button id="btnClearHistory" class="btn-clear-history">Limpar Histórico</button>
+      </div>
+
+      <div class="table-container">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Jogo</th>
+              <th>Escolha / Mult.</th>
+              <th>Apostado</th>
+              <th>Resultado</th>
+              <th>Retorno</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody">
+            <tr class="empty-row">
+              <td colspan="6">Nenhuma aposta realizada ainda. Boa sorte!</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Footer disclaimer -->
+    <footer class="footer">
+      <p>⚠️ <strong>Aviso Importante:</strong> Este projeto é apenas um simulador para fins de entretenimento e estudo de código. Todo o saldo e moedas são 100% fictícios.</p>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
