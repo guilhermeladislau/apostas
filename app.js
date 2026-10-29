@@ -94,6 +94,24 @@ class SoundEffects {
     osc.start();
     osc.stop(this.ctx.currentTime + 0.03);
   }
+
+  playJackpot() {
+    this.init();
+    if (!this.ctx) return;
+    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98, 2093.00];
+    notes.forEach((freq, i) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.09);
+      gain.gain.setValueAtTime(0.25, this.ctx.currentTime + i * 0.09);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i * 0.09 + 0.4);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(this.ctx.currentTime + i * 0.09);
+      osc.stop(this.ctx.currentTime + i * 0.09 + 0.4);
+    });
+  }
 }
 
 const sounds = new SoundEffects();
@@ -139,7 +157,15 @@ const DOM = {
   coin: document.getElementById('coin'),
   coinStatus: document.getElementById('coinStatus'),
   coinSideBtns: document.querySelectorAll('.btn-coin-pick'),
-  coinHistory: document.getElementById('coinHistory')
+  coinHistory: document.getElementById('coinHistory'),
+
+  // Slots (Caça-Níquel)
+  btnSpinSlots: document.getElementById('btnSpinSlots'),
+  slotStatus: document.getElementById('slotStatus'),
+  slotResultBanner: document.getElementById('slotResultBanner'),
+  reelStrip1: document.getElementById('reelStrip1'),
+  reelStrip2: document.getElementById('reelStrip2'),
+  reelStrip3: document.getElementById('reelStrip3')
 };
 
 // --- PERSISTÊNCIA LOCAL ---
@@ -813,6 +839,212 @@ const CoinFlipGame = {
   }
 };
 
+// ==========================================
+// 🎰 JOGO 4: CAÇA-NÍQUEL (SLOT MACHINE)
+// ==========================================
+const SlotMachineGame = {
+  isSpinning: false,
+  symbolHeight: 120,
+  stripLength: 30,
+  targetIndex: 24,
+
+  symbols: [
+    { id: '7', char: '7️⃣', name: 'Sete da Sorte', mult: 25, weight: 2 },
+    { id: 'diamond', char: '💎', name: 'Diamante', mult: 15, weight: 4 },
+    { id: 'bell', char: '🔔', name: 'Sino Dourado', mult: 10, weight: 7 },
+    { id: 'grape', char: '🍇', name: 'Uva Roxa', mult: 5, weight: 12 },
+    { id: 'lemon', char: '🍋', name: 'Limão Siciliano', mult: 3, weight: 18 },
+    { id: 'cherry', char: '🍒', name: 'Cereja', mult: 2, weight: 25 }
+  ],
+
+  reels: [],
+
+  init() {
+    this.reels = [
+      { strip: DOM.reelStrip1, currentOffset: 0 },
+      { strip: DOM.reelStrip2, currentOffset: 0 },
+      { strip: DOM.reelStrip3, currentOffset: 0 }
+    ];
+
+    this.buildReels();
+    DOM.btnSpinSlots.addEventListener('click', () => this.spin());
+  },
+
+  getRandomSymbol() {
+    const totalWeight = this.symbols.reduce((sum, s) => sum + s.weight, 0);
+    let rand = Math.random() * totalWeight;
+    for (const s of this.symbols) {
+      if (rand < s.weight) return s;
+      rand -= s.weight;
+    }
+    return this.symbols[this.symbols.length - 1];
+  },
+
+  buildReels() {
+    this.reels.forEach((reel, rIndex) => {
+      let html = '';
+      for (let i = 0; i < this.stripLength; i++) {
+        const randSym = this.getRandomSymbol();
+        html += `<div class="slot-symbol" data-sym-id="${randSym.id}">${randSym.char}</div>`;
+      }
+      reel.strip.innerHTML = html;
+      reel.strip.style.transform = 'translateY(0px)';
+    });
+  },
+
+  spin() {
+    if (this.isSpinning) return;
+    const bet = getValidBetAmount();
+    if (bet === null) return;
+
+    sounds.init();
+    this.isSpinning = true;
+    AppState.isGameRunning = true;
+    AppState.balance -= bet;
+    AppState.totalBets++;
+    updateUI();
+
+    DOM.btnSpinSlots.disabled = true;
+    DOM.slotStatus.textContent = 'Rolos girando... Torcendo pelo 7️⃣ 7️⃣ 7️⃣!';
+    DOM.slotResultBanner.className = 'slots-result-banner';
+    DOM.slotResultBanner.textContent = 'Girando...';
+
+    // Determina o resultado de cada rolo
+    const outcome1 = this.getRandomSymbol();
+    const outcome2 = this.getRandomSymbol();
+    const outcome3 = this.getRandomSymbol();
+    const outcomes = [outcome1, outcome2, outcome3];
+
+    // Injeta os símbolos vencedores na posição de parada de cada rolo
+    this.reels.forEach((reel, rIndex) => {
+      const symbolsElements = reel.strip.querySelectorAll('.slot-symbol');
+      if (symbolsElements[this.targetIndex]) {
+        symbolsElements[this.targetIndex].textContent = outcomes[rIndex].char;
+        symbolsElements[this.targetIndex].dataset.symId = outcomes[rIndex].id;
+      }
+
+      // Reinicia animação
+      reel.strip.style.transition = 'none';
+      reel.strip.style.transform = 'translateY(0px)';
+      void reel.strip.offsetWidth; // Força reflow
+    });
+
+    // Inicia rotação com frenagem escalonada
+    const durations = [1.4, 1.9, 2.4];
+    const targetTranslateY = -(this.targetIndex * this.symbolHeight);
+
+    // Efeito de som de giro contínuo
+    let spinTickCount = 0;
+    const spinTicker = setInterval(() => {
+      sounds.playTick();
+      spinTickCount++;
+      if (spinTickCount > 18) clearInterval(spinTicker);
+    }, 110);
+
+    this.reels.forEach((reel, rIndex) => {
+      reel.strip.style.transition = `transform ${durations[rIndex]}s cubic-bezier(0.12, 0.85, 0.25, 1)`;
+      reel.strip.style.transform = `translateY(${targetTranslateY}px)`;
+    });
+
+    // Paradas individuais com som
+    setTimeout(() => sounds.playTick(), 1400);
+    setTimeout(() => sounds.playTick(), 1900);
+    setTimeout(() => sounds.playTick(), 2400);
+
+    // Avaliação final do resultado
+    setTimeout(() => {
+      this.evaluateResult(bet, outcomes);
+    }, 2600);
+  },
+
+  evaluateResult(bet, outcomes) {
+    this.isSpinning = false;
+    AppState.isGameRunning = false;
+    DOM.btnSpinSlots.disabled = false;
+
+    const [o1, o2, o3] = outcomes;
+    const lineString = `${o1.char} ${o2.char} ${o3.char}`;
+
+    const isTriple = (o1.id === o2.id && o2.id === o3.id);
+    const isPair = !isTriple && (o1.id === o2.id || o2.id === o3.id || o1.id === o3.id);
+
+    if (isTriple) {
+      const multiplier = o1.mult;
+      const totalWin = bet * multiplier;
+      const netWin = totalWin - bet;
+
+      AppState.balance += totalWin;
+      AppState.wins++;
+      AppState.netProfit += netWin;
+      updateUI();
+
+      if (o1.id === '7') {
+        sounds.playJackpot();
+        DOM.slotResultBanner.className = 'slots-result-banner jackpot';
+        DOM.slotResultBanner.textContent = `💥 JACKPOT 777! (${lineString}) Ganhou ${formatCurrency(totalWin)}!`;
+        DOM.slotStatus.textContent = `🏆 MEGA JACKPOT DE ${multiplier}X! INCRÍVEL!`;
+        showToast(`💥 JACKPOT 777! Você faturou incríveis ${formatCurrency(totalWin)}!`, 'success');
+      } else {
+        sounds.playWin();
+        DOM.slotResultBanner.className = 'slots-result-banner win';
+        DOM.slotResultBanner.textContent = `🎉 TRIO DE ${o1.name.toUpperCase()}! (${lineString}) Ganhou ${formatCurrency(totalWin)}!`;
+        DOM.slotStatus.textContent = `🎯 Vitória! Trio de ${o1.name} (${multiplier}x)!`;
+        showToast(`Trio de ${o1.name}! Você ganhou ${formatCurrency(totalWin)}!`, 'success');
+      }
+
+      addHistoryRecord({
+        game: 'Caça-Níquel',
+        detail: `Trio: ${lineString} (${multiplier}x)`,
+        betAmount: bet,
+        outcome: 'win',
+        profit: netWin
+      });
+
+    } else if (isPair) {
+      const multiplier = 1.5;
+      const totalWin = bet * multiplier;
+      const netWin = totalWin - bet;
+
+      AppState.balance += totalWin;
+      AppState.wins++;
+      AppState.netProfit += netWin;
+      updateUI();
+
+      sounds.playWin();
+      DOM.slotResultBanner.className = 'slots-result-banner win';
+      DOM.slotResultBanner.textContent = `✨ PAR FORMADO! (${lineString}) Ganhou ${formatCurrency(totalWin)}!`;
+      DOM.slotStatus.textContent = `✨ Par premiado! Retorno de 1.5x da aposta!`;
+      showToast(`Par formado! Você recuperou a aposta com lucro de ${formatCurrency(totalWin)}!`, 'success');
+
+      addHistoryRecord({
+        game: 'Caça-Níquel',
+        detail: `Par: ${lineString} (1.5x)`,
+        betAmount: bet,
+        outcome: 'win',
+        profit: netWin
+      });
+
+    } else {
+      AppState.netProfit -= bet;
+      updateUI();
+
+      sounds.playLose();
+      DOM.slotResultBanner.className = 'slots-result-banner';
+      DOM.slotResultBanner.textContent = `❌ ${lineString} - Nenhum par formado.`;
+      DOM.slotStatus.textContent = `❌ Quase lá! Tente mais uma vez.`;
+      showToast(`Nenhuma combinação premiada (${lineString}). Tente de novo!`, 'error');
+
+      addHistoryRecord({
+        game: 'Caça-Níquel',
+        detail: `Sem combinação: ${lineString}`,
+        betAmount: bet,
+        outcome: 'loss',
+        profit: -bet
+      });
+    }
+  }
+};
+
 // --- INICIALIZAÇÃO DA APLICAÇÃO ---
 document.addEventListener('DOMContentLoaded', () => {
   loadStorage();
@@ -822,4 +1054,5 @@ document.addEventListener('DOMContentLoaded', () => {
   CrashGame.init();
   RouletteGame.init();
   CoinFlipGame.init();
+  SlotMachineGame.init();
 });

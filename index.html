@@ -41,6 +41,9 @@
       <button class="tab-btn" data-game="coinflip">
         <span class="tab-icon">🪙</span> Cara ou Coroa
       </button>
+      <button class="tab-btn" data-game="slots">
+        <span class="tab-icon">🎰</span> Caça-Níquel
+      </button>
     </nav>
 
     <!-- Main Content Grid -->
@@ -110,6 +113,25 @@
               </button>
             </div>
             <button id="btnCoinFlip" class="btn-play">Lançar Moeda 🪙</button>
+          </div>
+
+          <!-- Slot Machine Controls -->
+          <div class="specific-controls hidden" id="controls-slots">
+            <button id="btnSpinSlots" class="btn-play btn-slots-spin">
+              Puxar Alavanca / Girar 🎰
+            </button>
+            <div class="slots-paytable-preview">
+              <div class="pay-title">Tabela de Prêmios:</div>
+              <div class="pay-grid">
+                <span class="pay-chip">7️⃣ 7️⃣ 7️⃣ <strong>25x</strong></span>
+                <span class="pay-chip">💎 💎 💎 <strong>15x</strong></span>
+                <span class="pay-chip">🔔 🔔 🔔 <strong>10x</strong></span>
+                <span class="pay-chip">🍇 🍇 🍇 <strong>5x</strong></span>
+                <span class="pay-chip">🍋 🍋 🍋 <strong>3x</strong></span>
+                <span class="pay-chip">🍒 🍒 🍒 <strong>2x</strong></span>
+                <span class="pay-chip highlight">Par Qualquer <strong>1.5x</strong></span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -183,6 +205,41 @@
 
             <div class="coin-history-bar" id="coinHistory">
               <!-- dynamic coins -->
+            </div>
+          </div>
+        </div>
+
+        <!-- SLOTS STAGE (CAÇA-NÍQUEL) -->
+        <div class="game-stage" id="stage-slots">
+          <div class="slots-container">
+            <div class="slots-header">
+              <div class="slots-jackpot-badge">
+                <span class="jackpot-icon">⭐</span>
+                <span>JACKPOT 777: <strong>25X</strong></span>
+              </div>
+              <div class="slots-status" id="slotStatus">Puxe a alavanca e alinhe 3 símbolos!</div>
+            </div>
+
+            <div class="slots-machine">
+              <div class="slots-reels-container">
+                <div class="slots-payline"></div>
+                <!-- Reel 1 -->
+                <div class="slot-reel-window" id="reelWindow1">
+                  <div class="slot-reel-strip" id="reelStrip1"></div>
+                </div>
+                <!-- Reel 2 -->
+                <div class="slot-reel-window" id="reelWindow2">
+                  <div class="slot-reel-strip" id="reelStrip2"></div>
+                </div>
+                <!-- Reel 3 -->
+                <div class="slot-reel-window" id="reelWindow3">
+                  <div class="slot-reel-strip" id="reelStrip3"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="slots-result-banner" id="slotResultBanner">
+              Aguardando sua jogada...
             </div>
           </div>
         </div>

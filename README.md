@@ -20,6 +20,12 @@ Um aplicativo web moderno de simulação de apostas desenvolvido com **HTML5, CS
    - Escolha Cara ou Coroa.
    - Efeito visual 3D de lançamento de moeda com física de rotação.
 
+4. **🎰 Caça-Níquel (Slot Machine):**
+   - 3 rolos com física de rotação e frenagem escalonada independente.
+   - Linha de pagamento central (payline) iluminada.
+   - Multiplicadores para trios (7️⃣ 7️⃣ 7️⃣ paga 25x, 💎 paga 15x, 🔔 paga 10x, etc.) e prêmio para qualquer par formado (1.5x).
+   - Efeito sonoro exclusivo de Jackpot.
+
 ---
 
 ## 🛠️ Tecnologias Utilizadas
